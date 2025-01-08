@@ -30,8 +30,8 @@ jobs:
       - name: Install Cross-Compilation
         run: cargo install cross --locked
 
-      - name: Add Rust Target
-        run: rustup target add x86_64-pc-windows-gnu
+      # - name: Add Rust Target
+      #   run: rustup target add x86_64-pc-windows-gnu
 
       # - name: Set up Docker
       #   uses: docker/setup-buildx-action@v2
