@@ -4,63 +4,139 @@ on:
   release:
     types: [created]
 
+# jobs:
+#   release:
+#     name: release ${{ matrix.target }}
+#     runs-on: ubuntu-latest
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         include:
+#           - target: x86_64-pc-windows-gnu
+#             archive: tar.gz
+#           - target: x86_64-unknown-linux-musl
+#             archive: tar.gz tar.xz
+#           - target: x86_64-apple-darwin
+#             archive: tar.gz
+#     steps:
+#       - uses: actions/checkout@master
+#       - name: Compile and release
+#         uses: rust-build/rust-build.action@v1.3.2
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         with:
+#           RUSTTARGET: ${{ matrix.target }}
+#           ARCHIVE_TYPES: ${{ matrix.archive }}
+#           TOOLCHAIN_VERSION: 1.64.0
+#   windows-msvc-release:
+#     name: release windows msvc
+#     runs-on: windows-latest
+#     steps:
+#       - uses: actions/checkout@master
+#       - name: Build
+#         run: |
+#           cargo build --release
+#       - name: tar
+#         run: tar --directory=target/release -cf archive.tar.gz nitrogen.exe
+#         # - name: upload
+#         #   # run: |
+#         #   #   $id = gh api -H "Accept: application/vnd.github+json" /repos/capeprivacy/nitrogen/releases/tags/${{ github.ref_name }} --jq .id
+#         #   #   curl --fail-with-body -sS  -X POST --data-binary "@archive.tar.gz" -H 'Content-Type: application/octet-stream' -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' "https://uploads.github.com/repos/capeprivacy/nitrogen/releases/$id/assets?name=nitrogen_${{ github.ref_name }}_x86_64-pc-windows-msvc.tar.gz"
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#   macos-arm-release:
+#     name: release mac os arm release
+#     runs-on: macos-12
+#     steps:
+#       - uses: actions/checkout@master
+#       - name: check toolchain
+#         run: rustup default
+#       - name: Build
+#         run: |
+#           rustup toolchain install stable-aarch64-apple-darwin
+#           rustup target add aarch64-apple-darwin
+#           cargo build --release --target aarch64-apple-darwin
+#       - name: tar
+#         run: tar --directory=target/aarch64-apple-darwin/release -cf archive.tar.gz nitrogen
+#         # - name: upload
+#         #   run: |
+#         #     id=$(gh api -H "Accept: application/vnd.github+json" /repos/capeprivacy/nitrogen/releases/tags/${{ github.ref_name }} --jq .id)
+#         #     curl --fail-with-body -sS  -X POST --data-binary @"archive.tar.gz" -H 'Content-Type: application/octet-stream' -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://uploads.github.com/repos/capeprivacy/nitrogen/releases/$id/assets?name=nitrogen_${{ github.ref_name }}_aarch64-apple-darwin.tar.gz"
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
-  release:
-    name: release ${{ matrix.target }}
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         include:
-          - target: x86_64-pc-windows-gnu
-            archive: tar.gz
-          - target: x86_64-unknown-linux-musl
-            archive: tar.gz tar.xz
-          - target: x86_64-apple-darwin
-            archive: tar.gz
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          # - target: x86_64-apple-darwin
+          #   os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+
     steps:
-      - uses: actions/checkout@master
-      - name: Compile and release
-        uses: rust-build/rust-build.action@v1.3.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
         with:
-          RUSTTARGET: ${{ matrix.target }}
-          ARCHIVE_TYPES: ${{ matrix.archive }}
-          TOOLCHAIN_VERSION: 1.64.0
-  windows-msvc-release:
-    name: release windows msvc
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@master
-      - name: Build
+          toolchain: stable
+          profile: minimal
+
+      - name: Install Rust Target for Cross-Compilation
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Install Cross-Compilation
+        run: cargo install cross --locked
+
+      # - name: Add Rust Target
+      #   run: rustup target add x86_64-pc-windows-gnu
+
+      # - name: Set up Docker
+      #   uses: docker/setup-buildx-action@v2
+
+      - name: Build Binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Package Binary
         run: |
-          cargo build --release
-      - name: tar
-        run: tar --directory=target/release -cf archive.tar.gz nitrogen.exe
-        # - name: upload
-        #   # run: |
-        #   #   $id = gh api -H "Accept: application/vnd.github+json" /repos/capeprivacy/nitrogen/releases/tags/${{ github.ref_name }} --jq .id
-        #   #   curl --fail-with-body -sS  -X POST --data-binary "@archive.tar.gz" -H 'Content-Type: application/octet-stream' -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' "https://uploads.github.com/repos/capeprivacy/nitrogen/releases/$id/assets?name=nitrogen_${{ github.ref_name }}_x86_64-pc-windows-msvc.tar.gz"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  macos-arm-release:
-    name: release mac os arm release
-    runs-on: macos-12
-    steps:
-      - uses: actions/checkout@master
-      - name: check toolchain
-        run: rustup default
-      - name: Build
-        run: |
-          rustup toolchain install stable-aarch64-apple-darwin
-          rustup target add aarch64-apple-darwin
-          cargo build --release --target aarch64-apple-darwin
-      - name: tar
-        run: tar --directory=target/aarch64-apple-darwin/release -cf archive.tar.gz nitrogen
-        # - name: upload
-        #   run: |
-        #     id=$(gh api -H "Accept: application/vnd.github+json" /repos/capeprivacy/nitrogen/releases/tags/${{ github.ref_name }} --jq .id)
-        #     curl --fail-with-body -sS  -X POST --data-binary @"archive.tar.gz" -H 'Content-Type: application/octet-stream' -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://uploads.github.com/repos/capeprivacy/nitrogen/releases/$id/assets?name=nitrogen_${{ github.ref_name }}_aarch64-apple-darwin.tar.gz"
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            mkdir -p dist
+            cp target/${{ matrix.target }}/release/co-processor-cli.exe dist/
+            powershell Compress-Archive -Path dist/* -DestinationPath co-processor-cli-${{ matrix.target }}.zip
+          else
+            if [[ -f target/x86_64-apple-darwin/release/co-processor-cli ]]; then
+              TARGET_DIR="x86_64-apple-darwin"
+            elif [[ -f target/x86_64-unknown-linux-gnu/release/co-processor-cli ]]; then
+              TARGET_DIR="x86_64-unknown-linux-gnu"
+            else
+              echo "Error: Target binary not found in expected paths."
+              exit 1
+            fi
+
+            mkdir -p dist
+            cp target/$TARGET_DIR/release/co-processor-cli dist/
+            tar -czvf co-processor-cli-$TARGET_DIR.tar.gz -C dist .
+          fi
+
+      - name: Upload Packaged Binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-packaged
+          path: |
+            co-processor-cli-${{ matrix.target }}.zip
+            co-processor-cli-${{ matrix.target }}.tar.gz
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            co-processor-cli-${{ matrix.target }}.zip
+            co-processor-cli-${{ matrix.target }}.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
