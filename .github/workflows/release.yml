@@ -1,0 +1,64 @@
+name: Build and Release Binaries
+
+on:
+  push:
+    tags:
+      - "v*" # Trigger workflow on version tags (e.g., v1.0.0)
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        target:
+          [
+            x86_64-unknown-linux-gnu,
+            x86_64-apple-darwin,
+            x86_64-pc-windows-msvc,
+          ]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: Build Binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      # Packaging the binary
+      - name: Package Binary
+        run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            mkdir -p dist
+            cp target/${{ matrix.target }}/release/co-processor-cli.exe dist/
+            powershell Compress-Archive -Path dist/* -DestinationPath co-processor-cli-${{ matrix.target }}.zip
+          else
+            mkdir -p dist
+            cp target/${{ matrix.target }}/release/co-processor-cli dist/
+            tar -czvf co-processor-cli-${{ matrix.target }}.tar.gz -C dist .
+          fi
+
+      # Upload the packaged binary as an artifact
+      - name: Upload Packaged Binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-packaged
+          path: |
+            co-processor-cli-${{ matrix.target }}.zip
+            co-processor-cli-${{ matrix.target }}.tar.gz
+
+      # Publish the release with binaries
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            co-processor-cli-${{ matrix.target }}.zip
+            co-processor-cli-${{ matrix.target }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
