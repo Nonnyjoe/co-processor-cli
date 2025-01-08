@@ -28,10 +28,12 @@ jobs:
           toolchain: stable
           profile: minimal
 
+      - name: Install Rust Target for Cross-Compilation
+        run: rustup target add ${{ matrix.target }}
+
       - name: Build Binary
         run: cargo build --release --target ${{ matrix.target }}
 
-      # Packaging the binary
       - name: Package Binary
         run: |
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
@@ -44,7 +46,6 @@ jobs:
             tar -czvf co-processor-cli-${{ matrix.target }}.tar.gz -C dist .
           fi
 
-      # Upload the packaged binary as an artifact
       - name: Upload Packaged Binary
         uses: actions/upload-artifact@v3
         with:
@@ -53,7 +54,6 @@ jobs:
             co-processor-cli-${{ matrix.target }}.zip
             co-processor-cli-${{ matrix.target }}.tar.gz
 
-      # Publish the release with binaries
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
