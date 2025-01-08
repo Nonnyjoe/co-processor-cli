@@ -27,13 +27,11 @@ jobs:
       - name: Install Rust Target for Cross-Compilation
         run: rustup target add ${{ matrix.target }}
 
-      - name: Build Binary
-        run: cargo build --release --target ${{ matrix.target }}
+      - name: Install Cross-Compilation
+        run: cargo install cross
 
-      - name: Install MinGW for Windows Cross-Compilation (macOS/Linux)
-        if: matrix.target == 'x86_64-pc-windows-gnu' && runner.os != 'Windows'
-        run: |
-          brew install mingw-w64 || sudo apt-get install -y mingw-w64
+      - name: Build Binary
+        run: cross build --release --target ${{ matrix.target }}
 
       - name: Package Binary
         run: |
