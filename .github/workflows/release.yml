@@ -40,9 +40,18 @@ jobs:
             cp target/${{ matrix.target }}/release/co-processor-cli.exe dist/
             powershell Compress-Archive -Path dist/* -DestinationPath co-processor-cli-${{ matrix.target }}.zip
           else
+            if [[ -f target/x86_64-apple-darwin/release/co-processor-cli ]]; then
+              TARGET_DIR="x86_64-apple-darwin"
+            elif [[ -f target/x86_64-unknown-linux-gnu/release/co-processor-cli ]]; then
+              TARGET_DIR="x86_64-unknown-linux-gnu"
+            else
+              echo "Error: Target binary not found in expected paths."
+              exit 1
+            fi
+
             mkdir -p dist
-            cp target/${{ matrix.target }}/release/co-processor-cli dist/
-            tar -czvf co-processor-cli-${{ matrix.target }}.tar.gz -C dist .
+            cp target/$TARGET_DIR/release/co-processor-cli dist/
+            tar -czvf co-processor-cli-$TARGET_DIR.tar.gz -C dist .
           fi
 
       - name: Upload Packaged Binary
