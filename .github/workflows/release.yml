@@ -34,7 +34,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Add Rust Target
-        run: rustup target add x86_64-pc-windows-gnu --force-non-host
+        run: rustup target add x86_64-pc-windows-gnu -- --force-non-host
 
       - name: Build Binary
         run: cross build --release --target ${{ matrix.target }}
