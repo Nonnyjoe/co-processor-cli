@@ -28,7 +28,13 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Install Cross-Compilation
-        run: cargo install cross
+        run: cargo install cross --locked
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Add Rust Target
+        run: rustup target add x86_64-pc-windows-gnu --force-non-host
 
       - name: Build Binary
         run: cross build --release --target ${{ matrix.target }}
