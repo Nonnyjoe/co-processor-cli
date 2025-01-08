@@ -12,11 +12,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         target:
-          [
-            x86_64-unknown-linux-gnu,
-            x86_64-apple-darwin,
-            x86_64-pc-windows-msvc,
-          ]
+          [x86_64-unknown-linux-gnu, x86_64-apple-darwin, x86_64-pc-windows-gnu]
 
     steps:
       - name: Checkout Code
@@ -33,6 +29,11 @@ jobs:
 
       - name: Build Binary
         run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Install MinGW for Windows Cross-Compilation (macOS/Linux)
+        if: matrix.target == 'x86_64-pc-windows-gnu' && runner.os != 'Windows'
+        run: |
+          brew install mingw-w64 || sudo apt-get install -y mingw-w64
 
       - name: Package Binary
         run: |
