@@ -41,10 +41,10 @@ jobs:
         run: |
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             mkdir -p dist
-            cp target/${{ matrix.target }}/release/co-processor-cli.exe dist/
-            powershell Compress-Archive -Path dist/* -DestinationPath co-processor-cli-${{ matrix.target }}.zip
+            cp target/${{ matrix.target }}/release/cartesi-coprocessor.exe dist/
+            powershell Compress-Archive -Path dist/* -DestinationPath cartesi-coprocessor-${{ matrix.target }}.zip
           else
             mkdir -p dist
-            cp target/${{ matrix.target }}/release/co-processor-cli dist/
-            tar -czvf co-processor-cli-${{ matrix.target }}.tar.gz -C dist .
+            cp target/${{ matrix.target }}/release/cartesi-coprocessor dist/
+            tar -czvf cartesi-coprocessor-${{ matrix.target }}.tar.gz -C dist .
           fi
