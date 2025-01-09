@@ -38,7 +38,13 @@ jobs:
         run: cargo build --target ${{ matrix.target }} --release --verbose
 
       - name: Package Binary
-        run: TARGET_DIR="x86_64-apple-darwin"
-          mkdir -p dist
-          cp target/$TARGET_DIR/release/co-processor-cli dist/
-          tar -czvf co-processor-cli-$TARGET_DIR.tar.gz -C dist .
+        run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            mkdir -p dist
+            cp target/${{ matrix.target }}/release/co-processor-cli.exe dist/
+            powershell Compress-Archive -Path dist/* -DestinationPath co-processor-cli-${{ matrix.target }}.zip
+          else
+            mkdir -p dist
+            cp target/${{ matrix.target }}/release/co-processor-cli dist/
+            tar -czvf co-processor-cli-${{ matrix.target }}.tar.gz -C dist .
+          fi
