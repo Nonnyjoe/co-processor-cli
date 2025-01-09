@@ -48,3 +48,20 @@ jobs:
             cp target/${{ matrix.target }}/release/cartesi-coprocessor dist/
             tar -czvf cartesi-coprocessor-${{ matrix.target }}.tar.gz -C dist .
           fi
+
+      - name: Upload Packaged Binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-packaged
+          path: |
+            co-processor-cli-${{ matrix.target }}.zip
+            co-processor-cli-${{ matrix.target }}.tar.gz
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            co-processor-cli-${{ matrix.target }}.zip
+            co-processor-cli-${{ matrix.target }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
