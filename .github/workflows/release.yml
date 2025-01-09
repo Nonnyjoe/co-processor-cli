@@ -28,10 +28,8 @@ jobs:
           target: ${{ matrix.target }}
           profile: minimal
 
-      - name: Install rust target for cross-compilation
-        uses: actions-rs/cargo@v1
-        with:
-          command: rustup target add ${{ matrix.target }}
+      - name: Install Rust Target for Cross-Compilation
+        run: rustup target add ${{ matrix.target }}
 
       - name: Build and test
         run: cargo build --target ${{ matrix.target }} --release --verbose
