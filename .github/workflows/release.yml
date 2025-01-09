@@ -39,7 +39,7 @@ jobs:
 
       - name: Package Binary
         run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          if ([[ "${{ matrix.os }}" == "windows-latest" ]]); then
             mkdir -p dist
             cp target/${{ matrix.target }}/release/cartesi-coprocessor.exe dist/
             powershell Compress-Archive -Path dist/* -DestinationPath cartesi-coprocessor-${{ matrix.target }}.zip
@@ -54,14 +54,14 @@ jobs:
         with:
           name: ${{ matrix.os }}-packaged
           path: |
-            co-processor-cli-${{ matrix.target }}.zip
-            co-processor-cli-${{ matrix.target }}.tar.gz
+            cartesi-coprocessor-${{ matrix.target }}.zip
+            cartesi-coprocessor-${{ matrix.target }}.tar.gz
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            co-processor-cli-${{ matrix.target }}.zip
-            co-processor-cli-${{ matrix.target }}.tar.gz
+            cartesi-coprocessor-${{ matrix.target }}.zip
+            cartesi-coprocessor-${{ matrix.target }}.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
