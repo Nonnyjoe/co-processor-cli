@@ -6,17 +6,20 @@ on:
       - "v*" # Trigger workflow on version tags (e.g., v1.0.0)
 
 jobs:
-  build_mac:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
+            archive: tar.gz tar.xz
           - target: x86_64-apple-darwin
             os: macos-latest
+            archive: tar.gz
           - target: x86_64-pc-windows-msvc
             os: windows-latest
+            archive: tar.gz
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -33,3 +36,9 @@ jobs:
 
       - name: Build and test
         run: cargo build --target ${{ matrix.target }} --release --verbose
+
+      - name: Package Binary
+        run: TARGET_DIR="x86_64-apple-darwin"
+          mkdir -p dist
+          cp target/$TARGET_DIR/release/co-processor-cli dist/
+          tar -czvf co-processor-cli-$TARGET_DIR.tar.gz -C dist .
