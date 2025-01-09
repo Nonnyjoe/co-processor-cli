@@ -31,7 +31,7 @@ jobs:
       - name: Install rust target for cross-compilation
         uses: actions-rs/cargo@v1
         with:
-          command: target add ${{ matrix.target }}
+          command: rustup target add ${{ matrix.target }}
 
       - name: Build and test
         run: cargo build --target ${{ matrix.target }} --release --verbose
